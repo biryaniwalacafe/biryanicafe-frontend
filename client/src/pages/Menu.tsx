@@ -130,8 +130,8 @@ export default function Menu() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredItems.map((item) => (
-                    <MenuCard key={item.id} item={item} imageUrl={item.image} />
+                  {filteredItems.map((item, index) => (
+                    <MenuCard key={item.id} item={item} imageUrl={item.image} index={index} />
                   ))}
                 </div>
               )}

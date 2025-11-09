@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { Package, MapPin, LogOut } from "lucide-react";
+import { useEffect } from "react";
 
 //todo: remove mock functionality
 const mockOrders = [
@@ -50,15 +51,20 @@ export default function Profile() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const [, setLocation] = useLocation();
 
-  if (!isAuthenticated) {
-    setLocation("/auth");
-    return null;
-  }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLocation("/auth");
+    }
+  }, [isAuthenticated, setLocation]);
 
   const handleLogout = () => {
     logout();
     setLocation("/");
   };
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
