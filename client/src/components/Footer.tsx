@@ -33,19 +33,19 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Quick Links</h4>
             <div className="space-y-2">
               <Link href="/menu">
-                <a className="block text-muted-foreground hover:text-foreground" data-testid="link-footer-menu">
+                <span className="block text-muted-foreground hover:text-foreground cursor-pointer" data-testid="link-footer-menu">
                   Menu
-                </a>
+                </span>
               </Link>
               <Link href="/about">
-                <a className="block text-muted-foreground hover:text-foreground" data-testid="link-footer-about">
+                <span className="block text-muted-foreground hover:text-foreground cursor-pointer" data-testid="link-footer-about">
                   About Us
-                </a>
+                </span>
               </Link>
               <Link href="/contact">
-                <a className="block text-muted-foreground hover:text-foreground" data-testid="link-footer-contact">
+                <span className="block text-muted-foreground hover:text-foreground cursor-pointer" data-testid="link-footer-contact">
                   Contact
-                </a>
+                </span>
               </Link>
               <a href="#" className="block text-muted-foreground hover:text-foreground" data-testid="link-footer-faq">
                 FAQ
