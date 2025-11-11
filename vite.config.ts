@@ -26,12 +26,12 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "client", "src"),
+      "@": path.resolve(__dirname, "src"),  // Changed from "client/src" to "src"
       "@shared": path.resolve(__dirname, "shared"),
       "@assets": path.resolve(__dirname, "attached_assets"),
     },
   },
-  root: path.resolve(__dirname, "client"),
+  root: path.resolve(__dirname), // Changed to project root
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
