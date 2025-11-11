@@ -13,7 +13,6 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
-import Favorites from "@/pages/Favorites";
 
 function Router() {
   return (
@@ -26,7 +25,6 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/auth" component={Auth} />
       <Route path="/profile" component={Profile} />
-      <Route path="/favorites" component={Favorites} />
       <Route component={NotFound} />
     </Switch>
   );
