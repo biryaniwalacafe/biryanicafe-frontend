@@ -249,7 +249,8 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import axios, { AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 
-const API_URL = "http://localhost:8000/api";
+//const API_URL = "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Interfaces for dynamic data
 interface MiscCharge {

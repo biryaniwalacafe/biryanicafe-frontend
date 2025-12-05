@@ -457,7 +457,8 @@ import axios, { AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 
-const API_URL = "http://localhost:8000/api";
+//const API_URL = "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // --- INTERFACES ---
 interface MiscCharge {
