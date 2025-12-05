@@ -88,9 +88,9 @@ const features = [
   },
   {
     icon: Clock,
-    title: "Fast Delivery",
+    title: "Quick Pickup",
     description:
-      "Hot, fresh meals delivered to your door in 30 minutes or less, guaranteed.",
+      "Order ahead and pick up your meal fresh and fast—no waiting required.",
     color: "from-accent/20 to-accent/5",
     iconColor: "text-accent",
   },

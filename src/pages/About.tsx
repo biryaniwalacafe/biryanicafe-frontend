@@ -425,7 +425,7 @@ export default function About() {
               { icon: Sparkles, value: "2024", label: "Established" },
               { icon: ChefHat, value: "50+", label: "Dishes" },
               { icon: Heart, value: "2,000+", label: "Happy Customers" },
-              { icon: Clock, value: "30min", label: "Avg. Delivery" },
+              { icon: Clock, value: "20 min", label: "Avg. Prep Time" },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
