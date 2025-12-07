@@ -220,7 +220,7 @@ export default function Contact() {
       title: "Visit Us",
       content: (
         <>
-          2233 W 87th St
+          4723 W 87th St
           <br />
           Bridgeview, IL 60455
           <br />
@@ -240,7 +240,7 @@ export default function Contact() {
     {
       icon: Mail,
       title: "Email Us",
-      content: "hello@biriyaniwala.com",
+      content: "biryaniwalacafe@gmail.com",
       color: "from-accent/20 to-accent/5",
       iconColor: "text-accent",
     },
