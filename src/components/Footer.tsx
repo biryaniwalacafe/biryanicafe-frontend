@@ -129,7 +129,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Biriyani wala & Cafe. All rights reserved.</p>
+          <p>&copy; 2025 Biriyani wala & Cafe. All rights reserved.</p>
           <div className="flex justify-center gap-4 mt-2">
             <a
               href="#"
