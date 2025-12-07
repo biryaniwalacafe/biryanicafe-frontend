@@ -87,7 +87,7 @@ export function Footer() {
               <div className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <span className="text-sm" data-testid="text-address">
-                  2233 W 87th St Bridgeview, IL 60455 United States
+                  4723 W 87th St Bridgeview, IL 60455 United States
                 </span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -99,7 +99,7 @@ export function Footer() {
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="h-5 w-5 flex-shrink-0" />
                 <span className="text-sm" data-testid="text-email">
-                  hello@biriyaniwala.com
+                  biryaniwalacafe@gmail.com
                 </span>
               </div>
               <div className="flex items-start gap-2 text-muted-foreground">
