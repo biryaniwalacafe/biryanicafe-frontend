@@ -231,8 +231,8 @@ interface AuthorizeNetPaymentProps {
 }
 
 const authData = {
-  apiLoginID: import.meta.env.AUTHORIZE_NET_API_LOGIN_ID,
-  clientKey: import.meta.env.AUTHORIZE_NET_CLIENT_KEY,
+  apiLoginID: import.meta.env.VITE_AUTHORIZE_NET_API_LOGIN_ID,
+  clientKey: import.meta.env.VITE_AUTHORIZE_NET_CLIENT_KEY,
 };
 
 export function AuthorizeNetPayment({
