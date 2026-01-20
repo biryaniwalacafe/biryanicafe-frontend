@@ -231,10 +231,8 @@ interface AuthorizeNetPaymentProps {
 }
 
 const authData = {
-  apiLoginID: import.meta.env.VITE_AUTHORIZE_NET_API_LOGIN_ID || "7Jv44Uh9D8Y",
-  clientKey:
-    import.meta.env.VITE_AUTHORIZE_NET_CLIENT_KEY ||
-    "8wrDe8kG7SpZZ8799hDwvX98EeCN9QSKvewrwKmp838rARFR8tUwJ7Q9gB769ZWM",
+  apiLoginID: import.meta.env.AUTHORIZE_NET_API_LOGIN_ID,
+  clientKey: import.meta.env.AUTHORIZE_NET_CLIENT_KEY,
 };
 
 export function AuthorizeNetPayment({
