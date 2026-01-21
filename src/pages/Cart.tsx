@@ -894,8 +894,8 @@ export default function Cart() {
 
   // Restaurant location - UPDATE THIS with your actual restaurant coordinates
   const RESTAURANT_LOCATION = {
-    lat: 16.23669286608282,
-    lon: 80.05214998465802,
+    lat: 17.77097894202615,
+    lon: 83.21961199390776,
   };
 
   const axiosAuth = axios.create({ baseURL: API_URL });
