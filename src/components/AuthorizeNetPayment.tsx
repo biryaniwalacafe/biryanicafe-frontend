@@ -355,34 +355,10 @@ import {
   CreditCard,
   Wallet,
   Apple,
+  Wallet as GooglePayIcon,
   AlertCircle,
   X,
 } from "lucide-react";
-
-// Google Pay SVG icon as a React component
-const GooglePayIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 48 48" fill="none" {...props}>
-    <rect width="48" height="48" rx="8" fill="#fff" />
-    <g>
-      <path
-        d="M24 14c2.21 0 4.21.9 5.66 2.34l4.24-4.24C31.07 9.61 27.74 8 24 8 17.48 8 11.73 12.13 9.34 18.02l5.02 3.89C15.98 17.13 19.68 14 24 14z"
-        fill="#EA4335"
-      />
-      <path
-        d="M46.1 24.5c0-1.64-.15-3.22-.43-4.74H24v9.24h12.4c-.54 2.9-2.18 5.36-4.65 7.01l7.13 5.54C43.91 37.01 46.1 31.23 46.1 24.5z"
-        fill="#4285F4"
-      />
-      <path
-        d="M14.36 28.11A9.02 9.02 0 0 1 14 24c0-1.42.25-2.79.7-4.11l-5.02-3.89A15.98 15.98 0 0 0 8 24c0 2.61.63 5.08 1.74 7.25l5.02-3.14z"
-        fill="#FBBC05"
-      />
-      <path
-        d="M24 40c4.32 0 7.95-1.43 10.6-3.89l-7.13-5.54c-1.19.8-2.7 1.28-4.47 1.28-3.44 0-6.36-2.32-7.4-5.45l-5.02 3.14C11.73 35.87 17.48 40 24 40z"
-        fill="#34A853"
-      />
-    </g>
-  </svg>
-);
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 

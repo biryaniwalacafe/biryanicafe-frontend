@@ -1010,9 +1010,12 @@ export default function Checkout() {
   const [newOrderId, setNewOrderId] = useState<string | null>(null);
   const [miscCharges, setMiscCharges] = useState<MiscCharge[]>([]);
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(
+    null,
+  );
   const [couponLoading, setCouponLoading] = useState(false);
-  const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrderDetails | null>(null);
+  const [confirmedOrder, setConfirmedOrder] =
+    useState<ConfirmedOrderDetails | null>(null);
 
   const [deliveryInfo, setDeliveryInfo] = useState<{
     type: "pickup" | "delivery";
@@ -1134,16 +1137,16 @@ export default function Checkout() {
     token?: string;
   }) => {
     console.log("Payment success:", paymentData);
-    
+
     // For cards - use nonce directly
-    if (paymentData.method === 'card' && paymentData.nonce) {
+    if (paymentData.method === "card" && paymentData.nonce) {
       handlePlaceOrder(paymentData.nonce);
       return;
     }
 
     // For other methods - send payment data to backend
     const orderPayload = {
-      coupon_code: appliedCoupon?.code || null,
+      coupon_code: appliedCoupon?.code || "",
       additional_notes: additionalNotes,
       delivery_type: deliveryInfo?.type || "pickup",
       delivery_fee: deliveryInfo?.deliveryFee || 0,
@@ -1212,7 +1215,7 @@ export default function Checkout() {
     // Legacy card-only order (still works)
     setIsLoading(true);
     const orderPayload = {
-      coupon_code: appliedCoupon?.code || null,
+      coupon_code: appliedCoupon?.code || "",
       additional_notes: additionalNotes,
       delivery_type: deliveryInfo?.type || "pickup",
       delivery_fee: deliveryInfo?.deliveryFee || 0,
@@ -1275,12 +1278,14 @@ export default function Checkout() {
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
                   <Check className="h-10 w-10 text-green-600 dark:text-green-400" />
                 </div>
-                <h2 className="font-serif text-3xl font-bold mb-2">Order Confirmed!</h2>
+                <h2 className="font-serif text-3xl font-bold mb-2">
+                  Order Confirmed!
+                </h2>
                 <p className="text-muted-foreground text-lg">
                   Your Order ID: <strong>{newOrderId}</strong>
                 </p>
               </div>
-              
+
               <Card className="text-left">
                 <CardHeader>
                   <CardTitle>Order Summary</CardTitle>
@@ -1300,12 +1305,17 @@ export default function Checkout() {
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{item.name}</p>
-                          {item.customizations && item.customizations.length > 0 && (
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {item.customizations.map((c) => c.selection).join(", ")}
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                          {item.customizations &&
+                            item.customizations.length > 0 && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {item.customizations
+                                  .map((c) => c.selection)
+                                  .join(", ")}
+                              </p>
+                            )}
+                          <p className="text-xs text-muted-foreground">
+                            Qty: {item.quantity}
+                          </p>
                         </div>
                         <span className="font-semibold text-sm whitespace-nowrap">
                           ${(parseFloat(item.price) * item.quantity).toFixed(2)}
@@ -1315,53 +1325,66 @@ export default function Checkout() {
                   </div>
 
                   <Separator />
-                  
+
                   {/* Pricing Breakdown */}
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
                       <span>${confirmedOrder.subtotal.toFixed(2)}</span>
                     </div>
-                    
-                    {confirmedOrder.deliveryInfo && confirmedOrder.deliveryInfo.deliveryFee > 0 && (
-                      <div className="flex justify-between">
-                        <span>Delivery Fee</span>
-                        <span>${confirmedOrder.deliveryInfo.deliveryFee.toFixed(2)}</span>
-                      </div>
-                    )}
-                    
+
+                    {confirmedOrder.deliveryInfo &&
+                      confirmedOrder.deliveryInfo.deliveryFee > 0 && (
+                        <div className="flex justify-between">
+                          <span>Delivery Fee</span>
+                          <span>
+                            $
+                            {confirmedOrder.deliveryInfo.deliveryFee.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+
                     {confirmedOrder.deliveryInfo?.type && (
                       <div className="flex justify-between">
                         <span className="flex items-center gap-1">
-                          {confirmedOrder.deliveryInfo.type === 'delivery' ? <MapPin className="h-3 w-3" /> : <Package className="h-3 w-3" />}
-                          {confirmedOrder.deliveryInfo.type === 'delivery' 
-                            ? `Delivery (${confirmedOrder.deliveryInfo.distance?.toFixed(1) || 0} miles)` 
-                            : 'Pickup'
-                          }
+                          {confirmedOrder.deliveryInfo.type === "delivery" ? (
+                            <MapPin className="h-3 w-3" />
+                          ) : (
+                            <Package className="h-3 w-3" />
+                          )}
+                          {confirmedOrder.deliveryInfo.type === "delivery"
+                            ? `Delivery (${confirmedOrder.deliveryInfo.distance?.toFixed(1) || 0} miles)`
+                            : "Pickup"}
                         </span>
                         <span className="capitalize font-medium">
                           {confirmedOrder.deliveryInfo.type}
                         </span>
                       </div>
                     )}
-                    
+
                     {confirmedOrder.charges.map((charge) => (
                       <div key={charge.name} className="flex justify-between">
-                        <span className="text-muted-foreground">{charge.name}</span>
+                        <span className="text-muted-foreground">
+                          {charge.name}
+                        </span>
                         <span>${charge.value.toFixed(2)}</span>
                       </div>
                     ))}
-                    
+
                     {confirmedOrder.discount && (
                       <div className="flex justify-between text-green-600 font-medium">
                         <span>Discount ({confirmedOrder.discount.code})</span>
-                        <span>-${confirmedOrder.discount.amount.toFixed(2)}</span>
+                        <span>
+                          -${confirmedOrder.discount.amount.toFixed(2)}
+                        </span>
                       </div>
                     )}
-                    
+
                     <div className="border-t pt-3 flex justify-between font-bold text-xl">
                       <span>Total</span>
-                      <span className="text-primary">${confirmedOrder.total.toFixed(2)}</span>
+                      <span className="text-primary">
+                        ${confirmedOrder.total.toFixed(2)}
+                      </span>
                     </div>
                   </div>
 
@@ -1377,10 +1400,19 @@ export default function Checkout() {
               </Card>
 
               <div className="space-y-3 pt-6">
-                <Button className="w-full" size="lg" onClick={() => setLocation("/")}>
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={() => setLocation("/")}
+                >
                   🍔 Order More Food
                 </Button>
-                <Button variant="outline" className="w-full" size="lg" onClick={() => setLocation("/auth?tab=orders")}>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                  onClick={() => setLocation("/auth?tab=orders")}
+                >
                   📋 View Orders
                 </Button>
               </div>
@@ -1399,14 +1431,15 @@ export default function Checkout() {
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="font-serif text-4xl font-bold mb-8">Checkout</h1>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Order Items */}
             <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    Your Order ({items.length} item{items.length !== 1 ? 's' : ''})
+                    Your Order ({items.length} item
+                    {items.length !== 1 ? "s" : ""})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1422,19 +1455,28 @@ export default function Checkout() {
                           className="w-20 h-20 object-cover rounded-md flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-lg leading-tight">{item.name}</h4>
-                          {item.customizations && item.customizations.length > 0 && (
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {item.customizations.map((c) => c.selection).join(", ")}
-                            </p>
-                          )}
+                          <h4 className="font-semibold text-lg leading-tight">
+                            {item.name}
+                          </h4>
+                          {item.customizations &&
+                            item.customizations.length > 0 && (
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                {item.customizations
+                                  .map((c) => c.selection)
+                                  .join(", ")}
+                              </p>
+                            )}
                           <p className="text-sm text-muted-foreground mt-1">
-                            Qty: {item.quantity} • ${parseFloat(item.price).toFixed(2)} each
+                            Qty: {item.quantity} • $
+                            {parseFloat(item.price).toFixed(2)} each
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-lg">
-                            ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                            $
+                            {(parseFloat(item.price) * item.quantity).toFixed(
+                              2,
+                            )}
                           </p>
                         </div>
                       </div>
@@ -1477,45 +1519,55 @@ export default function Checkout() {
                       <span>Subtotal ({items.length} items)</span>
                       <span>${subtotal.toFixed(2)}</span>
                     </div>
-                    
+
                     {deliveryFee > 0 && deliveryInfo && (
                       <div className="flex justify-between p-2 bg-blue-50 rounded-lg">
                         <span className="flex items-center gap-1 text-blue-700">
                           <MapPin className="h-4 w-4" />
-                          Delivery ({deliveryInfo.distance?.toFixed(1) || 0} miles)
+                          Delivery ({deliveryInfo.distance?.toFixed(1) ||
+                            0}{" "}
+                          miles)
                         </span>
-                        <span className="font-semibold text-blue-700">${deliveryFee.toFixed(2)}</span>
+                        <span className="font-semibold text-blue-700">
+                          ${deliveryFee.toFixed(2)}
+                        </span>
                       </div>
                     )}
-                    
-                    {deliveryInfo?.type === 'pickup' && (
+
+                    {deliveryInfo?.type === "pickup" && (
                       <div className="flex justify-between p-2 bg-green-50 rounded-lg">
                         <span className="flex items-center gap-1 text-green-700">
                           <Package className="h-4 w-4" />
                           Pickup (Free)
                         </span>
-                        <span className="font-semibold text-green-700">$0.00</span>
+                        <span className="font-semibold text-green-700">
+                          $0.00
+                        </span>
                       </div>
                     )}
-                    
+
                     {calculatedCharges.map((charge) => (
                       <div key={charge.name} className="flex justify-between">
-                        <span className="text-muted-foreground">{charge.name}</span>
+                        <span className="text-muted-foreground">
+                          {charge.name}
+                        </span>
                         <span>${charge.amount.toFixed(2)}</span>
                       </div>
                     ))}
-                    
+
                     {appliedCoupon && (
                       <div className="flex justify-between bg-green-50 p-3 rounded-lg text-green-700 font-medium">
                         <span>Discount ({appliedCoupon.code})</span>
                         <span>-${discountAmount.toFixed(2)}</span>
                       </div>
                     )}
-                    
+
                     <Separator />
                     <div className="flex justify-between text-xl font-bold">
                       <span>Total</span>
-                      <span className="text-2xl text-primary">${total.toFixed(2)}</span>
+                      <span className="text-2xl text-primary">
+                        ${total.toFixed(2)}
+                      </span>
                     </div>
                   </div>
 
@@ -1528,23 +1580,40 @@ export default function Checkout() {
                           id="coupon-code"
                           placeholder="Enter coupon code"
                           value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                          onChange={(e) =>
+                            setCouponInput(e.target.value.toUpperCase())
+                          }
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleApplyCoupon()
+                          }
                         />
-                        <Button onClick={handleApplyCoupon} disabled={couponLoading || !couponInput.trim()}>
-                          {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                        <Button
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading || !couponInput.trim()}
+                        >
+                          {couponLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Apply"
+                          )}
                         </Button>
                       </div>
                     ) : (
                       <div className="flex items-center justify-between p-3 bg-green-50 border rounded-lg">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full" />
-                          <span className="font-medium text-green-700">{appliedCoupon.code} Applied!</span>
+                          <span className="font-medium text-green-700">
+                            {appliedCoupon.code} Applied!
+                          </span>
                           <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">
                             -{appliedCoupon.discount_percent}%
                           </span>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={handleRemoveCoupon}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleRemoveCoupon}
+                        >
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
