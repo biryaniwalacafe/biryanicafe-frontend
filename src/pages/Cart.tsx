@@ -909,6 +909,7 @@ export default function Cart() {
   });
 
   // Haversine distance calculation in Miles
+  // Haversine distance calculation in Miles
   function calculateDistance(
     lat1: number,
     lon1: number,
@@ -928,13 +929,14 @@ export default function Cart() {
         Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const straightLineDist = earthRadiusMiles * c;
 
-    // CHICAGO SUBURBS FACTOR: 1.20 (I-294, Archer Ave, 87th St grid)
-    // Your 4.2 → 4.9 example becomes: 4.2 * 1.20 = 5.04 miles ✅
-    const chicagoSuburbsFactor = 1.2;
+    const straightLineDistance = earthRadiusMiles * c;
 
-    return straightLineDist * chicagoSuburbsFactor;
+    // OPTIONAL: Multiply by 1.3 to estimate "Driving Distance" (Road curvature factor)
+    // Remove this line if you strictly want straight-line radius
+    const estimatedDrivingDistance = straightLineDistance * 1.2;
+
+    return estimatedDrivingDistance;
   }
 
   // Effect to fetch dynamic charges
