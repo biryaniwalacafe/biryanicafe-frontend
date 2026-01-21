@@ -909,13 +909,13 @@ export default function Cart() {
   });
 
   // Haversine distance calculation in Miles
+  // Haversine distance calculation in Miles
   function calculateDistance(
     lat1: number,
     lon1: number,
     lat2: number,
     lon2: number,
   ): number {
-    // Radius of the earth in miles (approx 3958.8)
     const earthRadiusMiles = 3958.8;
 
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -930,7 +930,13 @@ export default function Cart() {
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return earthRadiusMiles * c;
+    const straightLineDistance = earthRadiusMiles * c;
+
+    // OPTIONAL: Multiply by 1.3 to estimate "Driving Distance" (Road curvature factor)
+    // Remove this line if you strictly want straight-line radius
+    const estimatedDrivingDistance = straightLineDistance * 1.3;
+
+    return estimatedDrivingDistance;
   }
 
   // Effect to fetch dynamic charges
@@ -1013,64 +1019,83 @@ export default function Cart() {
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const userLat = position.coords.latitude;
-          const userLon = position.coords.longitude;
+      const successHandler = (position: GeolocationPosition) => {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
 
-          setUserLocation({ lat: userLat, lon: userLon });
+        setUserLocation({ lat: userLat, lon: userLon });
 
-          const dist = calculateDistance(
-            RESTAURANT_LOCATION.lat,
-            RESTAURANT_LOCATION.lon,
-            userLat,
-            userLon,
-          );
+        const dist = calculateDistance(
+          RESTAURANT_LOCATION.lat,
+          RESTAURANT_LOCATION.lon,
+          userLat,
+          userLon,
+        );
 
-          setDistance(dist);
+        setDistance(dist);
 
-          if (dist > 5) {
-            setLocationError("Sorry, delivery is not available beyond 5 Miles");
-            setDeliveryFee(0);
-            toast({
-              title: "Location Out of Range",
-              description:
-                "Delivery is only available within 5 Miles. Please choose pickup.",
-              variant: "destructive",
-            });
-          } else if (dist <= 2) {
-            setDeliveryFee(0);
-            toast({
-              title: "Free Delivery!",
-              description: `Your location is under ${dist.toFixed(2)} 2 Miles radius. Delivery is free!`,
-            });
-          } else {
-            setDeliveryFee(4.99);
-            toast({
-              title: "Delivery Available",
-              description: `Your location is ${dist.toFixed(2)} Miles away. Delivery fee: $4.99`,
-            });
-          }
-
-          setLoadingLocation(false);
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
+        if (dist > 5) {
           setLocationError(
-            "Unable to retrieve your location. Please enable location services.",
+            `You are ${dist.toFixed(1)} miles away. Delivery is limited to 5 miles.`,
           );
-          setDeliveryOption("pickup");
-          setLoadingLocation(false);
+          setDeliveryFee(0);
+          // Don't auto-switch to pickup immediately, let the user see the error
           toast({
-            title: "Location Error",
-            description:
-              "Please enable location access to use delivery option.",
+            title: "Too Far for Delivery",
+            description: "We currently only deliver within a 5-mile radius.",
             variant: "destructive",
           });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-      );
+        } else if (dist <= 2) {
+          setDeliveryFee(0);
+          toast({
+            title: "Free Delivery!",
+            description: `Your location is ${dist.toFixed(1)} miles away. Delivery is free!`,
+          });
+        } else {
+          setDeliveryFee(4.99);
+          toast({
+            title: "Delivery Available",
+            description: `Your location is ${dist.toFixed(1)} miles away. Delivery fee: $4.99`,
+          });
+        }
+        setLoadingLocation(false);
+      };
+
+      const errorHandler = (error: GeolocationPositionError) => {
+        console.error("Geolocation error:", error);
+        let errorMessage = "Unable to retrieve location.";
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage =
+              "Please allow location access in your browser settings.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out. Please try again.";
+            break;
+        }
+
+        setLocationError(errorMessage);
+        setDeliveryOption("pickup"); // Fallback to pickup
+        setLoadingLocation(false);
+        toast({
+          title: "Location Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      };
+
+      // Try high accuracy first
+      navigator.geolocation.getCurrentPosition(successHandler, errorHandler, {
+        enableHighAccuracy: true,
+        timeout: 15000, // Increased timeout to 15s
+        maximumAge: 10000, // Accept cached location up to 10s old
+      });
     } else {
+      // Reset if user switches back to pickup
       setDeliveryFee(0);
       setUserLocation(null);
       setDistance(null);
@@ -1261,7 +1286,7 @@ export default function Cart() {
                       distance !== null &&
                       !locationError && (
                         <div className="text-sm text-muted-foreground bg-background p-2 rounded">
-                          <p>📍 Distance: {distance.toFixed(2)} KM</p>
+                          <p>📍 Distance: {distance.toFixed(2)} Miles</p>
                           {distance <= 2 && (
                             <p className="text-green-600 font-medium">
                               ✓ Free delivery!
@@ -1269,7 +1294,7 @@ export default function Cart() {
                           )}
                           {distance > 2 && distance <= 5 && (
                             <p className="text-blue-600 font-medium">
-                              Delivery fee: $10
+                              Delivery fee: $4.99
                             </p>
                           )}
                         </div>
