@@ -894,9 +894,9 @@ export default function Cart() {
 
   // Restaurant location - UPDATE THIS with your actual restaurant coordinates
   const RESTAURANT_LOCATION = {
-    lat: 17.74487057753513,
-    lon: 83.26007070945172,
-  }; // Visakhapatnam default
+    lat: 16.23669286608282,
+    lon: 80.05214998465802,
+  };
 
   const axiosAuth = axios.create({ baseURL: API_URL });
   axiosAuth.interceptors.request.use((config: InternalAxiosRequestConfig) => {
@@ -908,14 +908,16 @@ export default function Cart() {
     return config;
   });
 
-  // Haversine distance calculation
+  // Haversine distance calculation in Miles
   function calculateDistance(
     lat1: number,
     lon1: number,
     lat2: number,
     lon2: number,
   ): number {
-    const earthRadiusKm = 6371;
+    // Radius of the earth in miles (approx 3958.8)
+    const earthRadiusMiles = 3958.8;
+
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
 
@@ -927,7 +929,8 @@ export default function Cart() {
         Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return earthRadiusKm * c;
+
+    return earthRadiusMiles * c;
   }
 
   // Effect to fetch dynamic charges
@@ -1027,25 +1030,25 @@ export default function Cart() {
           setDistance(dist);
 
           if (dist > 5) {
-            setLocationError("Sorry, delivery is not available beyond 5 KM");
+            setLocationError("Sorry, delivery is not available beyond 5 Miles");
             setDeliveryFee(0);
             toast({
               title: "Location Out of Range",
               description:
-                "Delivery is only available within 5 KM. Please choose pickup.",
+                "Delivery is only available within 5 Miles. Please choose pickup.",
               variant: "destructive",
             });
           } else if (dist <= 2) {
             setDeliveryFee(0);
             toast({
               title: "Free Delivery!",
-              description: `Your location is ${dist.toFixed(2)} KM away. Delivery is free!`,
+              description: `Your location is under ${dist.toFixed(2)} 2 Miles radius. Delivery is free!`,
             });
           } else {
-            setDeliveryFee(10);
+            setDeliveryFee(4.99);
             toast({
               title: "Delivery Available",
-              description: `Your location is ${dist.toFixed(2)} KM away. Delivery fee: $10`,
+              description: `Your location is ${dist.toFixed(2)} Miles away. Delivery fee: $4.99`,
             });
           }
 
