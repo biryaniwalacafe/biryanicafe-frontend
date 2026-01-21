@@ -909,7 +909,6 @@ export default function Cart() {
   });
 
   // Haversine distance calculation in Miles
-  // Haversine distance calculation in Miles
   function calculateDistance(
     lat1: number,
     lon1: number,
@@ -934,7 +933,7 @@ export default function Cart() {
 
     // OPTIONAL: Multiply by 1.3 to estimate "Driving Distance" (Road curvature factor)
     // Remove this line if you strictly want straight-line radius
-    const estimatedDrivingDistance = straightLineDistance * 1.2;
+    const estimatedDrivingDistance = straightLineDistance * 1.4;
 
     return estimatedDrivingDistance;
   }
