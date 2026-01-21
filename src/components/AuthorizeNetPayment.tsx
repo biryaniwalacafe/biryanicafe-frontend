@@ -4,7 +4,7 @@
 // import { Input } from "@/components/ui/input";
 // import { Label } from "@/components/ui/label";
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Loader2, CreditCard, AlertCircle } from "lucide-react";
+// import { Loader2, CreditCard, AlertCircle, X } from "lucide-react";
 // import { useToast } from "@/hooks/use-toast";
 
 // interface AuthorizeNetPaymentProps {
@@ -14,10 +14,8 @@
 // }
 
 // const authData = {
-//   apiLoginID: import.meta.env.VITE_AUTHORIZE_NET_API_LOGIN_ID || "7Jv44Uh9D8Y",
-//   clientKey:
-//     import.meta.env.VITE_AUTHORIZE_NET_CLIENT_KEY ||
-//     "8wrDe8kG7SpZZ8799hDwvX98EeCN9QSKvewrwKmp838rARFR8tUwJ7Q9gB769ZWM",
+//   apiLoginID: import.meta.env.VITE_AUTHORIZE_NET_API_LOGIN_ID,
+//   clientKey: import.meta.env.VITE_AUTHORIZE_NET_CLIENT_KEY,
 // };
 
 // export function AuthorizeNetPayment({
@@ -26,7 +24,7 @@
 //   onPaymentError,
 // }: AuthorizeNetPaymentProps) {
 //   const { dispatchData, loading, error } = useAcceptJs({
-//     environment: "SANDBOX", // Change to 'PRODUCTION' for live
+//     environment: "PRODUCTION",
 //     authData,
 //   });
 //   const { toast } = useToast();
@@ -38,14 +36,27 @@
 //     cardCode: "",
 //   });
 
-//   // **DEBUG: Log auth data**
-//   console.log("Auth Data:", authData);
-//   console.log("Accept.js Error:", error);
+//   // ✅ NEW: Card validation errors state
+//   const [cardErrors, setCardErrors] = useState<{
+//     cardNumber?: string;
+//     month?: string;
+//     year?: string;
+//     cardCode?: string;
+//     general?: string;
+//   }>({});
+
+//   // Clear errors when user types
+//   const clearFieldError = (field: keyof typeof cardData) => {
+//     setCardErrors((prev) => ({ ...prev, [field]: undefined }));
+//   };
 
 //   const handleSubmit = async (e: React.FormEvent) => {
 //     e.preventDefault();
 
-//     // Validation
+//     // Clear previous errors
+//     setCardErrors({});
+
+//     // Basic validation
 //     if (
 //       !cardData.cardNumber ||
 //       !cardData.month ||
@@ -61,49 +72,94 @@
 //     }
 
 //     try {
-//       console.log("Submitting card data:", cardData); // DEBUG
+//       console.log("Submitting card data:", cardData);
 //       const response = await dispatchData({
-//         ...cardData,
-//         cardData, // Ensure cardData is passed correctly
+//         cardData: {
+//           cardNumber: cardData.cardNumber.replace(/\s/g, ""), // Clean spaces
+//           month: cardData.month,
+//           year: cardData.year,
+//           cardCode: cardData.cardCode,
+//         },
 //       });
 
-//       console.log("Accept.js Response:", response); // DEBUG
+//       console.log("Accept.js Response:", response);
 
 //       if (response.messages.resultCode === "Error") {
-//         const errorMsg =
-//           response.messages.message?.map((m: any) => m.text).join(", ") ||
-//           "Unknown error";
-//         console.error("Accept.js Error Details:", response);
-//         onPaymentError(errorMsg);
+//         // ✅ DETAILED ERROR PARSING
+//         const messages = response.messages.message || [];
+//         let generalError = "";
+//         const fieldErrors: any = {};
+
+//         messages.forEach((msg: any) => {
+//           const text = msg.text || "";
+//           const code = msg.code || "";
+
+//           // Parse field-specific errors
+//           if (text.includes("cardNumber") || code.includes("cardNumber")) {
+//             fieldErrors.cardNumber = text;
+//           } else if (text.includes("month") || text.includes("expDate")) {
+//             fieldErrors.month = text;
+//           } else if (text.includes("year") || text.includes("expDate")) {
+//             fieldErrors.year = text;
+//           } else if (text.includes("cardCode") || text.includes("CVV")) {
+//             fieldErrors.cardCode = text;
+//           } else {
+//             // General error (like E_WC_20)
+//             generalError += text + " ";
+//           }
+//         });
+
+//         // Set field-specific errors
+//         if (Object.keys(fieldErrors).length > 0) {
+//           setCardErrors(fieldErrors);
+//         }
+
+//         // Show general error in toast
+//         if (generalError.trim()) {
+//           const errorMsg = generalError.trim();
+//           setCardErrors((prev) => ({ ...prev, general: errorMsg }));
+//           onPaymentError(errorMsg);
+//           toast({
+//             title: "Card Validation Error",
+//             description: errorMsg,
+//             variant: "destructive",
+//           });
+//         }
 //         return;
 //       }
 
 //       // Success - extract nonce
 //       const nonce = response.opaqueData?.dataValue;
 //       if (nonce) {
-//         console.log("Payment nonce generated:", nonce); // DEBUG
+//         console.log("Payment nonce generated:", nonce);
+//         setCardErrors({}); // Clear errors on success
 //         onPaymentSuccess(nonce);
 //       } else {
 //         onPaymentError("Payment nonce not received");
 //       }
 //     } catch (err: any) {
 //       console.error("Dispatch error:", err);
-//       onPaymentError(
-//         err.message || "Payment processing failed - check console",
-//       );
+//       const errorMsg =
+//         err?.messages?.message?.[0]?.text ||
+//         err.message ||
+//         "Payment processing failed";
+//       setCardErrors({ general: errorMsg });
+//       onPaymentError(errorMsg);
+//       toast({
+//         title: "Payment Error",
+//         description: errorMsg,
+//         variant: "destructive",
+//       });
 //     }
 //   };
 
-//   // Show auth data error
-//   if (!authData.apiLoginID || !authData.clientKey) {
+//   const authError = !authData.apiLoginID || !authData.clientKey;
+
+//   if (authError) {
 //     return (
 //       <div className="text-destructive text-sm p-4 bg-destructive/10 rounded-lg">
 //         <AlertCircle className="h-4 w-4 inline mr-2" />
-//         Payment configuration missing. Check your .env file:
-//         <br />
-//         <code>VITE_AUTHORIZE_NET_API_LOGIN_ID</code>
-//         <br />
-//         <code>VITE_AUTHORIZE_NET_CLIENT_KEY</code>
+//         Payment configuration missing. Check your .env file.
 //       </div>
 //     );
 //   }
@@ -117,12 +173,28 @@
 //         </CardTitle>
 //       </CardHeader>
 //       <CardContent>
+//         {/* Accept.js General Error */}
 //         {error && (
 //           <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-md text-destructive text-sm">
-//             {error}
+//             <div className="flex items-start gap-2">
+//               <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+//               <span>{error}</span>
+//             </div>
 //           </div>
 //         )}
+
+//         {/* ✅ FIELD-SPECIFIC ERRORS */}
+//         {cardErrors.general && (
+//           <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-md text-destructive text-sm">
+//             <div className="flex items-start gap-2">
+//               <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+//               <span>{cardErrors.general}</span>
+//             </div>
+//           </div>
+//         )}
+
 //         <form onSubmit={handleSubmit} className="space-y-4">
+//           {/* Card Number Field */}
 //           <div className="space-y-2">
 //             <Label htmlFor="cardNumber">Card Number</Label>
 //             <Input
@@ -131,17 +203,29 @@
 //               inputMode="numeric"
 //               placeholder="1234 5678 9012 3456"
 //               maxLength={19}
-//               value={cardData.cardNumber.replace(/\s/g, "")}
+//               className={
+//                 cardErrors.cardNumber
+//                   ? "border-destructive focus:border-destructive"
+//                   : ""
+//               }
+//               value={cardData.cardNumber}
 //               onChange={(e) => {
+//                 clearFieldError("cardNumber");
 //                 let value = e.target.value.replace(/\s/g, "");
-//                 // Add spaces for readability
 //                 value = value.match(/.{1,4}/g)?.join(" ") || value;
 //                 setCardData({ ...cardData, cardNumber: value });
 //               }}
 //             />
+//             {cardErrors.cardNumber && (
+//               <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+//                 <AlertCircle className="h-3 w-3" />
+//                 {cardErrors.cardNumber}
+//               </p>
+//             )}
 //           </div>
 
 //           <div className="grid grid-cols-3 gap-4">
+//             {/* Month Field */}
 //             <div className="space-y-2">
 //               <Label htmlFor="month">Exp. Month</Label>
 //               <Input
@@ -150,13 +234,26 @@
 //                 inputMode="numeric"
 //                 placeholder="MM"
 //                 maxLength={2}
-//                 value={cardData.month}
-//                 onChange={(e) =>
-//                   setCardData({ ...cardData, month: e.target.value })
+//                 className={
+//                   cardErrors.month
+//                     ? "border-destructive focus:border-destructive"
+//                     : ""
 //                 }
+//                 value={cardData.month}
+//                 onChange={(e) => {
+//                   clearFieldError("month");
+//                   setCardData({ ...cardData, month: e.target.value });
+//                 }}
 //               />
+//               {cardErrors.month && (
+//                 <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+//                   <AlertCircle className="h-3 w-3" />
+//                   {cardErrors.month}
+//                 </p>
+//               )}
 //             </div>
 
+//             {/* Year Field */}
 //             <div className="space-y-2">
 //               <Label htmlFor="year">Exp. Year</Label>
 //               <Input
@@ -165,13 +262,26 @@
 //                 inputMode="numeric"
 //                 placeholder="YY"
 //                 maxLength={4}
-//                 value={cardData.year}
-//                 onChange={(e) =>
-//                   setCardData({ ...cardData, year: e.target.value })
+//                 className={
+//                   cardErrors.year
+//                     ? "border-destructive focus:border-destructive"
+//                     : ""
 //                 }
+//                 value={cardData.year}
+//                 onChange={(e) => {
+//                   clearFieldError("year");
+//                   setCardData({ ...cardData, year: e.target.value });
+//                 }}
 //               />
+//               {cardErrors.year && (
+//                 <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+//                   <AlertCircle className="h-3 w-3" />
+//                   {cardErrors.year}
+//                 </p>
+//               )}
 //             </div>
 
+//             {/* CVV Field */}
 //             <div className="space-y-2">
 //               <Label htmlFor="cardCode">CVV</Label>
 //               <Input
@@ -180,11 +290,23 @@
 //                 inputMode="numeric"
 //                 placeholder="123"
 //                 maxLength={4}
-//                 value={cardData.cardCode}
-//                 onChange={(e) =>
-//                   setCardData({ ...cardData, cardCode: e.target.value })
+//                 className={
+//                   cardErrors.cardCode
+//                     ? "border-destructive focus:border-destructive"
+//                     : ""
 //                 }
+//                 value={cardData.cardCode}
+//                 onChange={(e) => {
+//                   clearFieldError("cardCode");
+//                   setCardData({ ...cardData, cardCode: e.target.value });
+//                 }}
 //               />
+//               {cardErrors.cardCode && (
+//                 <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+//                   <AlertCircle className="h-3 w-3" />
+//                   {cardErrors.cardCode}
+//                 </p>
+//               )}
 //             </div>
 //           </div>
 
@@ -215,18 +337,62 @@
 //     </Card>
 //   );
 // }
-import { useState } from "react";
+"use client";
+import { useState, useEffect, useCallback } from "react";
 import { useAcceptJs } from "react-acceptjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CreditCard, AlertCircle, X } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Loader2,
+  CreditCard,
+  Wallet,
+  Apple,
+  AlertCircle,
+  X,
+} from "lucide-react";
+
+// Google Pay SVG icon as a React component
+const GooglePayIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 48 48" fill="none" {...props}>
+    <rect width="48" height="48" rx="8" fill="#fff" />
+    <g>
+      <path
+        d="M24 14c2.21 0 4.21.9 5.66 2.34l4.24-4.24C31.07 9.61 27.74 8 24 8 17.48 8 11.73 12.13 9.34 18.02l5.02 3.89C15.98 17.13 19.68 14 24 14z"
+        fill="#EA4335"
+      />
+      <path
+        d="M46.1 24.5c0-1.64-.15-3.22-.43-4.74H24v9.24h12.4c-.54 2.9-2.18 5.36-4.65 7.01l7.13 5.54C43.91 37.01 46.1 31.23 46.1 24.5z"
+        fill="#4285F4"
+      />
+      <path
+        d="M14.36 28.11A9.02 9.02 0 0 1 14 24c0-1.42.25-2.79.7-4.11l-5.02-3.89A15.98 15.98 0 0 0 8 24c0 2.61.63 5.08 1.74 7.25l5.02-3.14z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M24 40c4.32 0 7.95-1.43 10.6-3.89l-7.13-5.54c-1.19.8-2.7 1.28-4.47 1.28-3.44 0-6.36-2.32-7.4-5.45l-5.02 3.14C11.73 35.87 17.48 40 24 40z"
+        fill="#34A853"
+      />
+    </g>
+  </svg>
+);
 import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface AuthorizeNetPaymentProps {
   amount: number;
-  onPaymentSuccess: (paymentNonce: string) => void;
+  onPaymentSuccess: (paymentData: {
+    nonce?: string;
+    method: string;
+    token?: string;
+  }) => void;
   onPaymentError: (error: string) => void;
 }
 
@@ -246,14 +412,18 @@ export function AuthorizeNetPayment({
   });
   const { toast } = useToast();
 
+  // Payment method state
+  const [paymentMethod, setPaymentMethod] = useState<
+    "card" | "paypal" | "apple" | "google"
+  >("card");
+
+  // Card state (your existing logic)
   const [cardData, setCardData] = useState({
     cardNumber: "",
     month: "",
     year: "",
     cardCode: "",
   });
-
-  // ✅ NEW: Card validation errors state
   const [cardErrors, setCardErrors] = useState<{
     cardNumber?: string;
     month?: string;
@@ -262,18 +432,49 @@ export function AuthorizeNetPayment({
     general?: string;
   }>({});
 
-  // Clear errors when user types
-  const clearFieldError = (field: keyof typeof cardData) => {
+  // Digital wallet availability
+  const [applePayAvailable, setApplePayAvailable] = useState(false);
+  const [googlePayAvailable, setGooglePayAvailable] = useState(false);
+
+  // Clear card errors
+  const clearFieldError = useCallback((field: keyof typeof cardData) => {
     setCardErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Check digital wallet availability
+  useEffect(() => {
+    // Apple Pay availability
+    if (typeof window !== "undefined") {
+      if (
+        (window as any).ApplePaySession &&
+        (window as any).ApplePaySession.supportsVersion(3)
+      ) {
+        setApplePayAvailable((window as any).ApplePaySession.canMakePayments());
+      }
+
+      // Google Pay availability
+      if ((window as any).google && (window as any).google.payments) {
+        const paymentsClient = new (
+          window as any
+        ).google.payments.PaymentDataClient();
+        paymentsClient
+          .isReadyToPay({
+            apiVersion: 2,
+            apiVersionMinor: 0,
+          })
+          .then((response: any) => {
+            setGooglePayAvailable(response.result);
+          })
+          .catch(() => setGooglePayAvailable(false));
+      }
+    }
+  }, []);
+
+  // Your existing card submit handler
+  const handleCardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Clear previous errors
     setCardErrors({});
 
-    // Basic validation
     if (
       !cardData.cardNumber ||
       !cardData.month ||
@@ -282,27 +483,23 @@ export function AuthorizeNetPayment({
     ) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all card details",
+        description: "Please fill all card details",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      console.log("Submitting card data:", cardData);
       const response = await dispatchData({
         cardData: {
-          cardNumber: cardData.cardNumber.replace(/\s/g, ""), // Clean spaces
+          cardNumber: cardData.cardNumber.replace(/\s/g, ""),
           month: cardData.month,
           year: cardData.year,
           cardCode: cardData.cardCode,
         },
       });
 
-      console.log("Accept.js Response:", response);
-
       if (response.messages.resultCode === "Error") {
-        // ✅ DETAILED ERROR PARSING
         const messages = response.messages.message || [];
         let generalError = "";
         const fieldErrors: any = {};
@@ -310,8 +507,6 @@ export function AuthorizeNetPayment({
         messages.forEach((msg: any) => {
           const text = msg.text || "";
           const code = msg.code || "";
-
-          // Parse field-specific errors
           if (text.includes("cardNumber") || code.includes("cardNumber")) {
             fieldErrors.cardNumber = text;
           } else if (text.includes("month") || text.includes("expDate")) {
@@ -321,23 +516,17 @@ export function AuthorizeNetPayment({
           } else if (text.includes("cardCode") || text.includes("CVV")) {
             fieldErrors.cardCode = text;
           } else {
-            // General error (like E_WC_20)
             generalError += text + " ";
           }
         });
 
-        // Set field-specific errors
-        if (Object.keys(fieldErrors).length > 0) {
-          setCardErrors(fieldErrors);
-        }
-
-        // Show general error in toast
+        if (Object.keys(fieldErrors).length > 0) setCardErrors(fieldErrors);
         if (generalError.trim()) {
           const errorMsg = generalError.trim();
           setCardErrors((prev) => ({ ...prev, general: errorMsg }));
           onPaymentError(errorMsg);
           toast({
-            title: "Card Validation Error",
+            title: "Card Error",
             description: errorMsg,
             variant: "destructive",
           });
@@ -345,21 +534,16 @@ export function AuthorizeNetPayment({
         return;
       }
 
-      // Success - extract nonce
       const nonce = response.opaqueData?.dataValue;
       if (nonce) {
-        console.log("Payment nonce generated:", nonce);
-        setCardErrors({}); // Clear errors on success
-        onPaymentSuccess(nonce);
+        setCardErrors({});
+        onPaymentSuccess({ nonce, method: "card" });
       } else {
         onPaymentError("Payment nonce not received");
       }
     } catch (err: any) {
-      console.error("Dispatch error:", err);
       const errorMsg =
-        err?.messages?.message?.[0]?.text ||
-        err.message ||
-        "Payment processing failed";
+        err?.messages?.message?.[0]?.text || err.message || "Payment failed";
       setCardErrors({ general: errorMsg });
       onPaymentError(errorMsg);
       toast({
@@ -368,6 +552,182 @@ export function AuthorizeNetPayment({
         variant: "destructive",
       });
     }
+  };
+
+  // PayPal handler
+  const handlePayPal = async () => {
+    if (!import.meta.env.VITE_PAYPAL_CLIENT_ID) {
+      toast({
+        title: "PayPal Error",
+        description: "PayPal not configured",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create order on your backend first
+    try {
+      const response = await fetch("/api/paypal/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: amount.toFixed(2) }),
+      });
+      const { id: orderID } = await response.json();
+
+      // Use PayPal JS SDK (modern flow)
+      const paypal = (window as any).paypal;
+      paypal
+        .Buttons({
+          createOrder: () => orderID,
+          onApprove: async (data: any) => {
+            const response = await fetch("/api/paypal/capture-order", {
+              method: "POST",
+              body: JSON.stringify({ orderID: data.orderID }),
+            });
+            const result = await response.json();
+            onPaymentSuccess({ method: "paypal", token: result.token });
+          },
+        })
+        .render("#paypal-button-container");
+    } catch (err) {
+      onPaymentError("PayPal setup failed");
+    }
+  };
+
+  // Apple Pay handler (requires merchant validation endpoint)
+  const handleApplePay = async () => {
+    if (!(window as any).ApplePaySession) {
+      toast({
+        title: "Apple Pay Error",
+        description: "Apple Pay not supported",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const session = new (window as any).ApplePaySession(3, {
+      countryCode: "US",
+      currencyCode: "USD",
+      supportedNetworks: ["visa", "masterCard", "amex", "discover"],
+      merchantCapabilities: ["supportsCredit", "supportsDebit"],
+      total: { label: "Your Order", amount: amount.toFixed(2) },
+    });
+
+    session.onvalidatemerchant = async (event: any) => {
+      try {
+        const response = await fetch("/api/apple-pay/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ validationURL: event.validationURL }),
+        });
+        const merchantSession = await response.json();
+        session.completeMerchantValidation(merchantSession);
+      } catch (err) {
+        session.abort();
+      }
+    };
+
+    session.onpaymentauthorized = async (event: any) => {
+      try {
+        const response = await fetch("/api/apple-pay/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentData: event.payment.token.paymentData,
+            amount: amount.toFixed(2),
+          }),
+        });
+        const result = await response.json();
+
+        if (result.success && result.nonce) {
+          session.completePayment(
+            (window as any).ApplePaySession.STATUS_SUCCESS,
+          );
+          onPaymentSuccess({ nonce: result.nonce, method: "apple-pay" });
+        } else {
+          session.completePayment(
+            (window as any).ApplePaySession.STATUS_FAILURE,
+          );
+          onPaymentError(result.error || "Payment failed");
+        }
+      } catch (err) {
+        session.completePayment((window as any).ApplePaySession.STATUS_FAILURE);
+        onPaymentError("Payment processing failed");
+      }
+    };
+
+    session.begin();
+  };
+
+  // Google Pay handler
+  const handleGooglePay = () => {
+    if (!(window as any).google?.payments) {
+      toast({
+        title: "Google Pay Error",
+        description: "Google Pay not supported",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const paymentsClient = new (
+      window as any
+    ).google.payments.PaymentDataClient();
+    const paymentDataRequest = {
+      apiVersion: 2,
+      apiVersionMinor: 0,
+      allowedPaymentMethods: [
+        {
+          type: "CARD",
+          parameters: {
+            allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+            allowedCardNetworks: ["VISA", "MASTERCARD", "AMEX", "DISCOVER"],
+          },
+          tokenizationSpecification: {
+            type: "PAYMENT_GATEWAY",
+            parameters: {
+              gateway: "authorizenet",
+              gatewayMerchantId: authData.apiLoginID,
+            },
+          },
+        },
+      ],
+      merchantInfo: {
+        merchantId: "YOUR_GOOGLE_MERCHANT_ID", // Get from Google Pay Console
+        merchantName: "Your Store",
+      },
+      transactionInfo: {
+        totalPriceStatus: "FINAL",
+        totalPrice: amount.toFixed(2),
+        currencyCode: "USD",
+        countryCode: "US",
+      },
+    };
+
+    paymentsClient
+      .loadPaymentData(paymentDataRequest)
+      .then((paymentData: any) => {
+        // Send token to your backend
+        fetch("/api/google-pay/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentToken: paymentData.paymentMethodData.tokenizationData.token,
+            amount: amount.toFixed(2),
+          }),
+        })
+          .then((res) => res.json())
+          .then((result) => {
+            if (result.success && result.nonce) {
+              onPaymentSuccess({ nonce: result.nonce, method: "google-pay" });
+            } else {
+              onPaymentError(result.error || "Payment failed");
+            }
+          });
+      })
+      .catch((err: any) => {
+        onPaymentError("Google Pay failed");
+      });
   };
 
   const authError = !authData.apiLoginID || !authData.clientKey;
@@ -388,11 +748,13 @@ export function AuthorizeNetPayment({
           <CreditCard className="h-5 w-5" />
           Secure Payment (${amount.toFixed(2)})
         </CardTitle>
+        <CardDescription>Choose your preferred payment method</CardDescription>
       </CardHeader>
-      <CardContent>
-        {/* Accept.js General Error */}
+
+      <CardContent className="space-y-6">
+        {/* Accept.js Error */}
         {error && (
-          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-md text-destructive text-sm">
+          <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-md text-destructive text-sm">
             <div className="flex items-start gap-2">
               <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
               <span>{error}</span>
@@ -400,156 +762,235 @@ export function AuthorizeNetPayment({
           </div>
         )}
 
-        {/* ✅ FIELD-SPECIFIC ERRORS */}
-        {cardErrors.general && (
-          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-md text-destructive text-sm">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>{cardErrors.general}</span>
-            </div>
-          </div>
+        {/* Payment Method Selection */}
+        {/* SIMPLIFIED WORKING VERSION */}
+        <div className="space-y-3">
+          {/* Card - Always available */}
+          <Button
+            variant={paymentMethod === "card" ? "default" : "outline"}
+            className="w-full justify-start"
+            onClick={() => setPaymentMethod("card")}
+          >
+            <CreditCard className="mr-2 h-5 w-5" />
+            Credit/Debit Card
+          </Button>
+
+          {/* PayPal - Simplified */}
+          <Button
+            variant={paymentMethod === "paypal" ? "default" : "outline"}
+            className="w-full justify-start"
+            onClick={() => setPaymentMethod("paypal")}
+            disabled={!import.meta.env.VITE_PAYPAL_CLIENT_ID}
+          >
+            <Wallet className="mr-2 h-5 w-5" />
+            {import.meta.env.VITE_PAYPAL_CLIENT_ID
+              ? "PayPal"
+              : "PayPal (Setup Required)"}
+          </Button>
+
+          {/* Apple Pay */}
+          <Button
+            variant={paymentMethod === "apple" ? "default" : "outline"}
+            className="w-full justify-start"
+            onClick={handleApplePay}
+            disabled={!applePayAvailable}
+          >
+            <Apple className="mr-2 h-5 w-5" />
+            {applePayAvailable ? "Apple Pay" : "Apple Pay Unavailable"}
+          </Button>
+
+          {/* Google Pay */}
+          <Button
+            variant={paymentMethod === "google" ? "default" : "outline"}
+            className="w-full justify-start"
+            onClick={handleGooglePay}
+            disabled={!googlePayAvailable}
+          >
+            <GooglePayIcon className="mr-2 h-5 w-5" />
+            {googlePayAvailable ? "Google Pay" : "Google Pay Unavailable"}
+          </Button>
+        </div>
+
+        {/* Card Form (only show for card payment) */}
+        {paymentMethod === "card" && (
+          <>
+            {cardErrors.general && (
+              <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-md text-destructive text-sm">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>{cardErrors.general}</span>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleCardSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cardNumber">Card Number</Label>
+                <Input
+                  id="cardNumber"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="1234 5678 9012 3456"
+                  maxLength={19}
+                  className={
+                    cardErrors.cardNumber
+                      ? "border-destructive focus:border-destructive"
+                      : ""
+                  }
+                  value={cardData.cardNumber}
+                  onChange={(e) => {
+                    clearFieldError("cardNumber");
+                    let value = e.target.value.replace(/\s/g, "");
+                    value = value.match(/.{1,4}/g)?.join(" ") || value;
+                    setCardData({ ...cardData, cardNumber: value });
+                  }}
+                />
+                {cardErrors.cardNumber && (
+                  <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {cardErrors.cardNumber}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="month">Exp. Month</Label>
+                  <Input
+                    id="month"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="MM"
+                    maxLength={2}
+                    className={
+                      cardErrors.month
+                        ? "border-destructive focus:border-destructive"
+                        : ""
+                    }
+                    value={cardData.month}
+                    onChange={(e) => {
+                      clearFieldError("month");
+                      setCardData({ ...cardData, month: e.target.value });
+                    }}
+                  />
+                  {cardErrors.month && (
+                    <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {cardErrors.month}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="year">Exp. Year</Label>
+                  <Input
+                    id="year"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="YY"
+                    maxLength={4}
+                    className={
+                      cardErrors.year
+                        ? "border-destructive focus:border-destructive"
+                        : ""
+                    }
+                    value={cardData.year}
+                    onChange={(e) => {
+                      clearFieldError("year");
+                      setCardData({ ...cardData, year: e.target.value });
+                    }}
+                  />
+                  {cardErrors.year && (
+                    <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {cardErrors.year}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cardCode">CVV</Label>
+                  <Input
+                    id="cardCode"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="123"
+                    maxLength={4}
+                    className={
+                      cardErrors.cardCode
+                        ? "border-destructive focus:border-destructive"
+                        : ""
+                    }
+                    value={cardData.cardCode}
+                    onChange={(e) => {
+                      clearFieldError("cardCode");
+                      setCardData({ ...cardData, cardCode: e.target.value });
+                    }}
+                  />
+                  {cardErrors.cardCode && (
+                    <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {cardErrors.cardCode}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing Payment...
+                  </>
+                ) : (
+                  `Pay Securely with Card $${amount.toFixed(2)}`
+                )}
+              </Button>
+            </form>
+          </>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Card Number Field */}
-          <div className="space-y-2">
-            <Label htmlFor="cardNumber">Card Number</Label>
-            <Input
-              id="cardNumber"
-              type="tel"
-              inputMode="numeric"
-              placeholder="1234 5678 9012 3456"
-              maxLength={19}
-              className={
-                cardErrors.cardNumber
-                  ? "border-destructive focus:border-destructive"
-                  : ""
-              }
-              value={cardData.cardNumber}
-              onChange={(e) => {
-                clearFieldError("cardNumber");
-                let value = e.target.value.replace(/\s/g, "");
-                value = value.match(/.{1,4}/g)?.join(" ") || value;
-                setCardData({ ...cardData, cardNumber: value });
-              }}
-            />
-            {cardErrors.cardNumber && (
-              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {cardErrors.cardNumber}
-              </p>
-            )}
-          </div>
+        {/* Quick Pay Buttons for Digital Wallets */}
+        {paymentMethod === "paypal" && (
+          <Button
+            onClick={handlePayPal}
+            className="w-full"
+            size="lg"
+            variant="outline"
+          >
+            <Wallet className="mr-2 h-5 w-5" />
+            Pay with PayPal (${amount.toFixed(2)})
+          </Button>
+        )}
 
-          <div className="grid grid-cols-3 gap-4">
-            {/* Month Field */}
-            <div className="space-y-2">
-              <Label htmlFor="month">Exp. Month</Label>
-              <Input
-                id="month"
-                type="tel"
-                inputMode="numeric"
-                placeholder="MM"
-                maxLength={2}
-                className={
-                  cardErrors.month
-                    ? "border-destructive focus:border-destructive"
-                    : ""
-                }
-                value={cardData.month}
-                onChange={(e) => {
-                  clearFieldError("month");
-                  setCardData({ ...cardData, month: e.target.value });
-                }}
-              />
-              {cardErrors.month && (
-                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {cardErrors.month}
-                </p>
-              )}
-            </div>
+        {paymentMethod === "apple" && applePayAvailable && (
+          <Button
+            onClick={handleApplePay}
+            className="w-full justify-start"
+            size="lg"
+            variant="outline"
+          >
+            <Apple className="mr-2 h-5 w-5" />
+            Pay with Apple Pay (${amount.toFixed(2)})
+          </Button>
+        )}
 
-            {/* Year Field */}
-            <div className="space-y-2">
-              <Label htmlFor="year">Exp. Year</Label>
-              <Input
-                id="year"
-                type="tel"
-                inputMode="numeric"
-                placeholder="YY"
-                maxLength={4}
-                className={
-                  cardErrors.year
-                    ? "border-destructive focus:border-destructive"
-                    : ""
-                }
-                value={cardData.year}
-                onChange={(e) => {
-                  clearFieldError("year");
-                  setCardData({ ...cardData, year: e.target.value });
-                }}
-              />
-              {cardErrors.year && (
-                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {cardErrors.year}
-                </p>
-              )}
-            </div>
-
-            {/* CVV Field */}
-            <div className="space-y-2">
-              <Label htmlFor="cardCode">CVV</Label>
-              <Input
-                id="cardCode"
-                type="tel"
-                inputMode="numeric"
-                placeholder="123"
-                maxLength={4}
-                className={
-                  cardErrors.cardCode
-                    ? "border-destructive focus:border-destructive"
-                    : ""
-                }
-                value={cardData.cardCode}
-                onChange={(e) => {
-                  clearFieldError("cardCode");
-                  setCardData({ ...cardData, cardCode: e.target.value });
-                }}
-              />
-              {cardErrors.cardCode && (
-                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {cardErrors.cardCode}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="pt-4 space-y-2">
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total Amount:</span>
-              <span className="text-primary">${amount.toFixed(2)}</span>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing Payment...
-                </>
-              ) : (
-                `Pay Securely $${amount.toFixed(2)}`
-              )}
-            </Button>
-          </div>
-        </form>
+        {paymentMethod === "google" && googlePayAvailable && (
+          <Button
+            onClick={handleGooglePay}
+            className="w-full justify-start"
+            size="lg"
+            variant="outline"
+          >
+            <GooglePayIcon className="mr-2 h-5 w-5" />
+            Pay with Google Pay (${amount.toFixed(2)})
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
