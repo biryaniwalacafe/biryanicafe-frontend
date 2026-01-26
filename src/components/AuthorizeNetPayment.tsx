@@ -1046,18 +1046,23 @@ export function AuthorizeNetPayment({
                       }}
                     />
                     <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent"
-                      onClick={() => setShowCvv(!showCvv)}
-                    >
-                      {showCvv ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
+  type="button"
+  variant="ghost"
+  size="sm"
+  className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent pointer-events-auto z-10"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowCvv(!showCvv);
+  }}
+>
+  {showCvv ? (
+    <EyeOff className="h-4 w-4" />
+  ) : (
+    <Eye className="h-4 w-4" />
+  )}
+</Button>
+
                   </div>
                   {cardErrors.cardCode && (
                     <p className="text-xs text-destructive mt-1 flex items-center gap-1">
