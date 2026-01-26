@@ -634,7 +634,7 @@
 // }
 
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAcceptJs } from "react-acceptjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -657,7 +657,6 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface AuthorizeNetPaymentProps {
   amount: number;
@@ -697,7 +696,7 @@ export function AuthorizeNetPayment({
     year: "",
     cardCode: "",
   });
-  const [showCvv, setShowCvv] = useState(false); // ✅ CVV Toggle State
+  const [showCvv, setShowCvv] = useState(false);
   const [cardErrors, setCardErrors] = useState<{
     cardNumber?: string;
     month?: string;
@@ -706,16 +705,15 @@ export function AuthorizeNetPayment({
     general?: string;
   }>({});
 
-  // Digital wallet availability
-  const [applePayAvailable, setApplePayAvailable] = useState(false);
-  const [googlePayAvailable, setGooglePayAvailable] = useState(false);
+  // CVV toggle ref to prevent form submission
+  const cvvToggleRef = useRef<HTMLDivElement>(null);
 
   // Clear card errors
   const clearFieldError = useCallback((field: keyof typeof cardData) => {
     setCardErrors((prev) => ({ ...prev, [field]: undefined }));
   }, []);
 
-  // Check digital wallet availability
+  // Digital wallet availability check
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Apple Pay
@@ -745,6 +743,11 @@ export function AuthorizeNetPayment({
   }, []);
 
   const handleCardSubmit = async (e: React.FormEvent) => {
+    // Prevent submission if clicking CVV toggle
+    if (cvvToggleRef.current?.contains(e.target as Node)) {
+      return;
+    }
+
     e.preventDefault();
     setCardErrors({});
 
@@ -829,7 +832,14 @@ export function AuthorizeNetPayment({
     }
   };
 
-  // Digital wallet handlers (unchanged - simplified for brevity)
+  // Toggle CVV visibility - FIXED VERSION
+  const toggleCvvVisibility = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowCvv((prev) => !prev);
+  };
+
+  // Digital wallet handlers
   const handlePayPal = () => {
     toast({
       title: "PayPal",
@@ -853,6 +863,9 @@ export function AuthorizeNetPayment({
       variant: "default",
     });
   };
+
+  const [applePayAvailable, setApplePayAvailable] = useState(false);
+  const [googlePayAvailable, setGooglePayAvailable] = useState(false);
 
   const authError = !authData.apiLoginID || !authData.clientKey;
 
@@ -1024,17 +1037,17 @@ export function AuthorizeNetPayment({
                   )}
                 </div>
 
-                {/* ✅ UPDATED CVV WITH TOGGLE */}
-                <div className="space-y-2">
+                {/* ✅ FIXED CVV WITH WORKING TOGGLE */}
+                <div className="space-y-2" ref={cvvToggleRef}>
                   <Label htmlFor="cardCode">CVV</Label>
                   <div className="relative">
                     <Input
                       id="cardCode"
-                      type={showCvv ? "text" : "tel"}
+                      type={showCvv ? "text" : "password"}
                       inputMode="numeric"
                       placeholder="•••"
                       maxLength={4}
-                      className={`pr-10 ${
+                      className={`pr-10 transition-all duration-200 ${
                         cardErrors.cardCode
                           ? "border-destructive focus:border-destructive"
                           : ""
@@ -1045,24 +1058,19 @@ export function AuthorizeNetPayment({
                         setCardData({ ...cardData, cardCode: e.target.value });
                       }}
                     />
-                    <Button
-  type="button"
-  variant="ghost"
-  size="sm"
-  className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent pointer-events-auto z-10"
-  onClick={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowCvv(!showCvv);
-  }}
->
-  {showCvv ? (
-    <EyeOff className="h-4 w-4" />
-  ) : (
-    <Eye className="h-4 w-4" />
-  )}
-</Button>
-
+                    {/* ✅ FIXED: Custom button instead of shadcn Button */}
+                    <button
+                      type="button"
+                      className="absolute right-2 top-9/10 -translate-y-1/2 flex items-center justify-center h-7 w-7 p-0 bg-background/80 hover:bg-background border border-input/50 rounded-sm transition-all duration-200 hover:scale-105 active:scale-95 z-20 group"
+                      onClick={toggleCvvVisibility}
+                      aria-label={showCvv ? "Hide CVV" : "Show CVV"}
+                    >
+                      {showCvv ? (
+                        <EyeOff className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      ) : (
+                        <Eye className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      )}
+                    </button>
                   </div>
                   {cardErrors.cardCode && (
                     <p className="text-xs text-destructive mt-1 flex items-center gap-1">
