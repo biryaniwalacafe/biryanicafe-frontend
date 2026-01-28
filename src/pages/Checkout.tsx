@@ -953,7 +953,7 @@ export default function Checkout() {
     ? {
         ...deliveryAddress,
         latitude: deliveryAddress?.latitude ?? null,
-        longitude: deliveryAddress?.longitude ?? null,,
+        longitude: deliveryAddress?.longitude ?? null,
       }
     : null,
       delivery_distance: deliveryInfo?.distance || null,
