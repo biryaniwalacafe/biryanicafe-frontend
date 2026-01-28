@@ -1291,25 +1291,6 @@ export default function Checkout() {
                 </CardContent>
               </Card>
 
-              {/* Additional Notes */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Additional Notes (Optional)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    id="additional-notes"
-                    placeholder="Any special instructions? (ex: 'Extra spicy', 'Leave at door', etc.)"
-                    value={additionalNotes}
-                    onChange={(e) => setAdditionalNotes(e.target.value)}
-                    className="min-h-[100px]"
-                    maxLength={500}
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {additionalNotes.length}/500 characters
-                  </p>
-                </CardContent>
-              </Card>
               {deliveryInfo?.type === "delivery" && deliveryAddress && (
   <Card>
     <CardHeader>
@@ -1385,6 +1366,26 @@ export default function Checkout() {
 </CardContent>
   </Card>
 )}
+
+              {/* Additional Notes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Additional Notes (Optional)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    id="additional-notes"
+                    placeholder="Any special instructions? (ex: 'Extra spicy', 'Leave at door', etc.)"
+                    value={additionalNotes}
+                    onChange={(e) => setAdditionalNotes(e.target.value)}
+                    className="min-h-[100px]"
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {additionalNotes.length}/500 characters
+                  </p>
+                </CardContent>
+              </Card>
             </div>
 
 
