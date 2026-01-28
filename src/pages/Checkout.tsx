@@ -1385,6 +1385,7 @@ export default function Checkout() {
 </CardContent>
   </Card>
 )}
+            </div>
 
 
             {/* Order Summary & Payment */}
