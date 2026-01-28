@@ -1318,6 +1318,72 @@ export default function Checkout() {
         Delivery Address
       </CardTitle>
     </CardHeader>
+    <CardContent className="space-y-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <Label>Full Name</Label>
+      <Input
+        type="text"
+        value={deliveryAddress.full_name}
+        onChange={(e) =>
+          updateAddress("full_name", e.target.value)
+        }
+      />
+    </div>
+
+    <div>
+      <Label>Phone</Label>
+      <Input
+        type="tel"
+        value={deliveryAddress.phone}
+        onChange={(e) =>
+          updateAddress("phone", e.target.value)
+        }
+      />
+    </div>
+  </div>
+
+  <div>
+    <Label>Address Line</Label>
+    <Input
+      type="text"
+      value={deliveryAddress.address_line}
+      onChange={(e) =>
+        updateAddress("address_line", e.target.value)
+      }
+    />
+  </div>
+
+  <div>
+    <Label>Landmark</Label>
+    <Input
+      type="text"
+      value={deliveryAddress.landmark}
+      onChange={(e) =>
+        updateAddress("landmark", e.target.value)
+      }
+    />
+  </div>
+
+  <div>
+    <Label>Zipcode</Label>
+    <Input
+  type="text"
+  inputMode="numeric"
+  maxLength={10}
+  value={deliveryAddress.zipcode}
+  onChange={(e) => updateAddress("zipcode", e.target.value)}
+/>
+
+  </div>
+
+  <div className="text-xs text-muted-foreground bg-muted p-3 rounded-lg">
+    📍 Coordinates:{" "}
+    {deliveryAddress.latitude ?? "N/A"},{" "}
+    {deliveryAddress.longitude ?? "N/A"}
+  </div>
+</CardContent>
+  </Card>
 
 
 
