@@ -748,12 +748,9 @@ interface ConfirmedOrderDetails {
 interface DeliveryAddress {
   full_name: string;
   phone: string;
-  address_line1: string;
-  address_line2?: string;
-  city: string;
-  state: string;
-  pincode: string;
+  address_line: string;
   landmark?: string;
+  zipcode: string;
   latitude?: number | null;
   longitude?: number | null;
 }
@@ -840,12 +837,9 @@ export default function Checkout() {
     setDeliveryAddress({
       full_name: "",
       phone: "",
-      address_line1: "",
-      address_line2: "",
-      city: "",
-      state: "",
-      pincode: "",
+      address_line: "",
       landmark: "",
+      zipcode: "",
       latitude: deliveryInfo?.userLocation?.lat || null,
       longitude: deliveryInfo?.userLocation?.lon || null,
     });
@@ -863,10 +857,8 @@ export default function Checkout() {
   (deliveryAddress &&
     deliveryAddress.full_name &&
     deliveryAddress.phone &&
-    deliveryAddress.address_line1 &&
-    deliveryAddress.city &&
-    deliveryAddress.state &&
-    deliveryAddress.pincode);
+    deliveryAddress.address_line &&
+    deliveryAddress.zipcode);
 
 
 
@@ -1353,14 +1345,14 @@ export default function Checkout() {
       <div>
         <Label>Address Line 1</Label>
         <Input
-          value={deliveryAddress.address_line1}
+          value={deliveryAddress.address_line}
           onChange={(e) =>
-            updateAddress("address_line1", e.target.value)
+            updateAddress("address_line", e.target.value)
           }
         />
       </div>
 
-      <div>
+      {/* <div>
         <Label>Address Line 2</Label>
         <Input
           value={deliveryAddress.address_line2}
@@ -1368,37 +1360,25 @@ export default function Checkout() {
             updateAddress("address_line2", e.target.value)
           }
         />
-      </div>
+      </div> */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <Label>City</Label>
           <Input
             value={deliveryAddress.city}
             onChange={(e) => updateAddress("city", e.target.value)}
           />
-        </div>
+        </div> */}
 
-        <div>
+        {/* <div>
           <Label>State</Label>
           <Input
             value={deliveryAddress.state}
             onChange={(e) => updateAddress("state", e.target.value)}
           />
-        </div>
-
+        </div> */}
         <div>
-          <Label>Pincode</Label>
-          <Input
-            value={deliveryAddress.pincode}
-            onChange={(e) =>
-              updateAddress("pincode", e.target.value)
-            }
-          />
-        </div>
-      </div>
-
-      <div>
         <Label>Landmark</Label>
         <Input
           value={deliveryAddress.landmark}
@@ -1407,6 +1387,19 @@ export default function Checkout() {
           }
         />
       </div>
+      
+        <div>
+          <Label>zipcode</Label>
+          <Input
+            value={deliveryAddress.zipcode}
+            onChange={(e) =>
+              updateAddress("zipcode", e.target.value)
+            }
+          />
+        </div>
+      </div>
+
+      
 
       {/* Coordinates Display */}
       <div className="text-xs text-muted-foreground bg-muted p-3 rounded-lg">
