@@ -888,6 +888,11 @@ export default function Checkout() {
     return null;
   }
 
+  const roundDistance = (distance?: number | null) => {
+  if (distance == null) return null;
+  return Number(distance.toFixed(8)); // 8 digits after decimal
+};
+
   // --- HANDLERS ---
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -948,7 +953,7 @@ export default function Checkout() {
         longitude: deliveryAddress?.longitude ?? null,
       }
     : null,
-      delivery_distance: deliveryInfo?.distance || null,
+      delivery_distance: roundDistance(deliveryInfo?.distance) || null,
       delivery_location: deliveryInfo?.userLocation || null,
       payment_method: paymentData.method, // 'paypal', 'apple-pay', 'google-pay'
       payment_token: paymentData.token || paymentData.nonce, // token or nonce
@@ -1017,7 +1022,7 @@ export default function Checkout() {
       additional_notes: additionalNotes,
       delivery_type: deliveryInfo?.type || "pickup",
       delivery_fee: deliveryInfo?.deliveryFee || 0,
-      delivery_distance: deliveryInfo?.distance || null,
+      delivery_distance: roundDistance(deliveryInfo?.distance) || null,
       delivery_location: deliveryInfo?.userLocation || null,
       delivery_address:
   deliveryInfo?.type === "delivery"
