@@ -890,7 +890,7 @@ export default function Checkout() {
 
   const roundDistance = (distance?: number | null) => {
   if (distance == null) return null;
-  return Number(distance.toFixed(8)); // 8 digits after decimal
+  return Number(distance.toFixed(2)); // 8 digits after decimal
 };
 
   // --- HANDLERS ---
