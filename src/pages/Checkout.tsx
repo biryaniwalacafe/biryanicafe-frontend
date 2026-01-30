@@ -860,13 +860,12 @@ export default function Checkout() {
 //     });
 //   }
 // }, [deliveryInfo]);
-  useEffect(() => {
+  // 1. First, initialize the object structure when deliveryInfo is available
+useEffect(() => {
   if (deliveryInfo?.type === "delivery" && !deliveryAddress) {
     setDeliveryAddress({
-      // Use user?.username or user?.full_name as a fallback
-      full_name: user?.username || "", 
-      // Use user?.phone if your auth store provides it
-      phone: user?.phone || "", 
+      full_name: "",
+      phone: "",
       address_line: "",
       landmark: "",
       zipcode: "",
@@ -874,7 +873,24 @@ export default function Checkout() {
       longitude: deliveryInfo?.userLocation?.lon || null,
     });
   }
-}, [deliveryInfo, user]); // Added user to dependencies
+}, [deliveryInfo]);
+
+// 2. Second, sync user data into the address only if the fields are currently empty
+useEffect(() => {
+  if (user && deliveryAddress) {
+    setDeliveryAddress(prev => {
+      // Only update if the user has current values and the form fields are still empty
+      if (prev && !prev.full_name && !prev.phone) {
+        return {
+          ...prev,
+          full_name: user.username || "",
+          phone: user.phone || ""
+        };
+      }
+      return prev;
+    });
+  }
+}, [user, !!deliveryAddress]); // !!deliveryAddress converts the object/null to a boolean
 
   const updateAddress = (field: keyof DeliveryAddress, value: any) => {
   setDeliveryAddress((prev) =>
@@ -1384,6 +1400,7 @@ export default function Checkout() {
     <Label>Address Line</Label>
     <Input
       type="text"
+      placeholder="Address"
       value={deliveryAddress.address_line}
       onChange={(e) =>
         updateAddress("address_line", e.target.value)
@@ -1395,6 +1412,7 @@ export default function Checkout() {
     <Label>Landmark</Label>
     <Input
       type="text"
+      placeholder="Landmark"
       value={deliveryAddress.landmark}
       onChange={(e) =>
         updateAddress("landmark", e.target.value)
@@ -1406,6 +1424,7 @@ export default function Checkout() {
     <Label>Zipcode</Label>
     <Input
   type="text"
+  placeholder="Zipcode"
   inputMode="numeric"
   maxLength={10}
   value={deliveryAddress.zipcode}
