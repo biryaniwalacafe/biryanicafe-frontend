@@ -709,7 +709,7 @@ import { Label } from "@/components/ui/label";
 import { useCartStore, CartItem } from "@/lib/store";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useLocation } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Check, Loader2, X, MapPin, Package } from "lucide-react";
 import axios, { AxiosHeaders, InternalAxiosRequestConfig } from "axios";
 import { useToast } from "@/hooks/use-toast";
@@ -787,7 +787,19 @@ export default function Checkout() {
   const [showPayment, setShowPayment] = useState(false);
 
   const axiosAuth = axios.create({ baseURL: API_URL });
-  axiosAuth.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  // axiosAuth.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  //   const token = useAuthStore.getState().accessToken;
+  //   if (token) {
+  //     if (!config.headers) config.headers = new AxiosHeaders();
+  //     config.headers.set("Authorization", `Bearer ${token}`);
+  //   }
+  //   return config;
+  // });
+
+  const axiosAuth = useMemo(() => {
+  const instance = axios.create({ baseURL: API_URL });
+  
+  instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = useAuthStore.getState().accessToken;
     if (token) {
       if (!config.headers) config.headers = new AxiosHeaders();
@@ -795,6 +807,9 @@ export default function Checkout() {
     }
     return config;
   });
+  
+  return instance;
+}, []);
 
   // --- EFFECTS ---
   useEffect(() => {
