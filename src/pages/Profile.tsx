@@ -75,7 +75,7 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="font-serif text-5xl font-bold mb-2" data-testid="text-profile-name">
-                  {user?.username}
+                  {user?.name}
                 </h1>
                 <p className="text-xl text-muted-foreground" data-testid="text-profile-email">
                   {user?.email}
