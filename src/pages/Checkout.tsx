@@ -785,6 +785,7 @@ export default function Checkout() {
   } | null>(null);
 
   const [showPayment, setShowPayment] = useState(false);
+  const { user, isAuthenticated } = useAuthStore();
 
   //const axiosAuth = axios.create({ baseURL: API_URL });
   // axiosAuth.interceptors.request.use((config: InternalAxiosRequestConfig) => {
