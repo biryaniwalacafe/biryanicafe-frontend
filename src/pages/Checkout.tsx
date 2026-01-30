@@ -847,11 +847,26 @@ export default function Checkout() {
     }
   }, []);
 
+//   useEffect(() => {
+//   if (deliveryInfo?.type === "delivery" && !deliveryAddress) {
+//     setDeliveryAddress({
+//       full_name: "",
+//       phone: "",
+//       address_line: "",
+//       landmark: "",
+//       zipcode: "",
+//       latitude: deliveryInfo?.userLocation?.lat || null,
+//       longitude: deliveryInfo?.userLocation?.lon || null,
+//     });
+//   }
+// }, [deliveryInfo]);
   useEffect(() => {
   if (deliveryInfo?.type === "delivery" && !deliveryAddress) {
     setDeliveryAddress({
-      full_name: "",
-      phone: "",
+      // Use user?.username or user?.full_name as a fallback
+      full_name: user?.username || "", 
+      // Use user?.phone if your auth store provides it
+      phone: user?.phone || "", 
       address_line: "",
       landmark: "",
       zipcode: "",
@@ -859,7 +874,7 @@ export default function Checkout() {
       longitude: deliveryInfo?.userLocation?.lon || null,
     });
   }
-}, [deliveryInfo]);
+}, [deliveryInfo, user]); // Added user to dependencies
 
   const updateAddress = (field: keyof DeliveryAddress, value: any) => {
   setDeliveryAddress((prev) =>
@@ -1320,7 +1335,7 @@ export default function Checkout() {
       </CardTitle>
     </CardHeader>
     <CardContent className="space-y-4">
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
       <Label>Full Name</Label>
       <Input
@@ -1342,7 +1357,28 @@ export default function Checkout() {
         }
       />
     </div>
+  </div> */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div>
+    <Label>Full Name</Label>
+    <Input
+      type="text"
+      placeholder="Your Name"
+      value={deliveryAddress.full_name}
+      onChange={(e) => updateAddress("full_name", e.target.value)}
+    />
   </div>
+
+  <div>
+    <Label>Phone</Label>
+    <Input
+      type="tel"
+      placeholder="Phone Number"
+      value={deliveryAddress.phone}
+      onChange={(e) => updateAddress("phone", e.target.value)}
+    />
+  </div>
+</div>
 
   <div>
     <Label>Address Line</Label>
