@@ -758,7 +758,7 @@ interface DeliveryAddress {
 
 export default function Checkout() {
   const { items, clearCart } = useCartStore();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress | null>(null);
@@ -785,8 +785,6 @@ export default function Checkout() {
   } | null>(null);
 
   const [showPayment, setShowPayment] = useState(false);
-  const { user, isAuthenticated } = useAuthStore();
-
   //const axiosAuth = axios.create({ baseURL: API_URL });
   // axiosAuth.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   //   const token = useAuthStore.getState().accessToken;
