@@ -795,6 +795,7 @@ export default function Checkout() {
   //   }
   //   return config;
   // });
+  // Fetch latest profile data to get the phone number
 
   const axiosAuth = useMemo(() => {
   const instance = axios.create({ baseURL: API_URL });
@@ -815,7 +816,23 @@ export default function Checkout() {
   useEffect(() => {
     if (!user) setLocation("/auth");
   }, [user, setLocation]);
+  useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      // Assuming your api/axiosAuth is set up to handle the token
+      const response = await axiosAuth.get("/auth/profile/"); 
+      // Update your store with the full user object including phone
+      // Replace 'updateUser' with whatever method your store uses to save user info
+      // If using zustand: useAuthStore.setState({ user: response.data });
+    } catch (error) {
+      console.error("Failed to sync profile data:", error);
+    }
+  };
 
+  if (isAuthenticated) {
+    fetchProfile();
+  }
+}, [isAuthenticated, axiosAuth]);
   useEffect(() => {
     if (orderPlaced) {
       clearCart();
