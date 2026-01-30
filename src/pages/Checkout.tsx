@@ -786,7 +786,7 @@ export default function Checkout() {
 
   const [showPayment, setShowPayment] = useState(false);
 
-  const axiosAuth = axios.create({ baseURL: API_URL });
+  //const axiosAuth = axios.create({ baseURL: API_URL });
   // axiosAuth.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   //   const token = useAuthStore.getState().accessToken;
   //   if (token) {
