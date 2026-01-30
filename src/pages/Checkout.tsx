@@ -761,7 +761,11 @@ export default function Checkout() {
   const { user, isAuthenticated } = useAuthStore();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress | null>(null);
+  // const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress | null>(null);
+  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress | null>(() => {
+  const saved = localStorage.getItem("saved_delivery_address");
+  return saved ? JSON.parse(saved) : null;
+});
 
   // --- STATE ---
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -876,43 +880,34 @@ export default function Checkout() {
 //     });
 //   }
 // }, [deliveryInfo]);
-  // 1. First, initialize the object structure when deliveryInfo is available
+// 1. Unified Handler for address updates
+const updateAddress = (field: keyof DeliveryAddress, value: string) => {
+  setDeliveryAddress((prev) => (prev ? { ...prev, [field]: value } : null));
+};
+
+// 2. Combined Sync Logic
 useEffect(() => {
+  // If delivery is selected but no address state exists, create it
   if (deliveryInfo?.type === "delivery" && !deliveryAddress) {
-    setDeliveryAddress({
-      full_name: "",
-      phone: "",
+    const initialAddress: DeliveryAddress = {
+      full_name: user?.username || "",
+      phone: user?.phone || "",
       address_line: "",
       landmark: "",
       zipcode: "",
       latitude: deliveryInfo?.userLocation?.lat || null,
       longitude: deliveryInfo?.userLocation?.lon || null,
-    });
+    };
+    setDeliveryAddress(initialAddress);
   }
-}, [deliveryInfo]);
+}, [deliveryInfo, user, !!deliveryAddress]);
 
-// 2. Second, sync user data into the address only if the fields are currently empty
+// 3. Keep localStorage in sync
 useEffect(() => {
-  if (user && deliveryAddress) {
-    setDeliveryAddress(prev => {
-      // Only update if the user has current values and the form fields are still empty
-      if (prev && !prev.full_name && !prev.phone) {
-        return {
-          ...prev,
-          full_name: user.username || "",
-          phone: user.phone || ""
-        };
-      }
-      return prev;
-    });
+  if (deliveryAddress) {
+    localStorage.setItem("saved_delivery_address", JSON.stringify(deliveryAddress));
   }
-}, [user, !!deliveryAddress]); // !!deliveryAddress converts the object/null to a boolean
-
-  const updateAddress = (field: keyof DeliveryAddress, value: any) => {
-  setDeliveryAddress((prev) =>
-    prev ? { ...prev, [field]: value } : prev,
-  );
-};
+}, [deliveryAddress]);
 
   const isDeliveryAddressValid =
   deliveryInfo?.type !== "delivery" ||
@@ -1367,29 +1362,6 @@ useEffect(() => {
       </CardTitle>
     </CardHeader>
     <CardContent className="space-y-4">
-  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <Label>Full Name</Label>
-      <Input
-        type="text"
-        value={deliveryAddress.full_name}
-        onChange={(e) =>
-          updateAddress("full_name", e.target.value)
-        }
-      />
-    </div>
-
-    <div>
-      <Label>Phone</Label>
-      <Input
-        type="tel"
-        value={deliveryAddress.phone}
-        onChange={(e) =>
-          updateAddress("phone", e.target.value)
-        }
-      />
-    </div>
-  </div> */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
   <div>
     <Label>Full Name</Label>
