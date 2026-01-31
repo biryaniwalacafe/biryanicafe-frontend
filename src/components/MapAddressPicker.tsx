@@ -117,14 +117,38 @@ export default function MapAddressPicker({
   }
 
   // --- Sub-component to handle map clicks ---
+  // Inside MapAddressPicker.tsx
+
   function LocationMarker() {
     useMapEvents({
-      click(e) {
-        onSelectLocation({
-          lat: e.latlng.lat,
-          lon: e.latlng.lng,
-          address: "",
-        });
+      async click(e) {
+        const { lat, lng } = e.latlng;
+
+        try {
+          // Reverse Geocoding Fetch
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+            {
+              headers: {
+                "User-Agent": "YourAppName/1.0", // Replace with your app name
+              },
+            },
+          );
+          const data = await response.json();
+
+          // This is the formatted address from OSM
+          const address = data.display_name || "";
+
+          onSelectLocation({
+            lat,
+            lon: lng,
+            address: address, // Passing the fetched address back
+          });
+        } catch (error) {
+          console.error("Geocoding failed", error);
+          // Fallback to just coordinates if fetch fails
+          onSelectLocation({ lat, lon: lng });
+        }
       },
     });
 
