@@ -1110,16 +1110,16 @@ export default function Checkout() {
   // Load Intent from Session (Pickup vs Delivery)
   useEffect(() => {
     const storedDeliveryInfo = sessionStorage.getItem("deliveryOption");
-    if (storedDeliveryInfo) {
+    if (storedDeliveryInfo && !deliveryInfo?.distance) {
       const parsed = JSON.parse(storedDeliveryInfo);
       setDeliveryInfo((prev) => ({
         ...parsed,
         // Reset these on fresh load to ensure recalculation happens via map
-        deliveryFee: prev?.deliveryFee || 0,
+        deliveryFee: prev?.deliveryFee ?? 0,
         distance: prev?.distance || null,
       }));
     }
-  }, []);
+  }, [deliveryInfo?.distance]);
 
   // Initialize Address State if Empty
   useEffect(() => {
@@ -1222,16 +1222,15 @@ export default function Checkout() {
 
       // 3. Update State
       setDeliveryError(error);
-      setDeliveryInfo((prev) =>
-        prev
-          ? {
-              ...prev,
-              distance: dist,
-              deliveryFee: fee,
-              userLocation: { lat: data.lat, lon: data.lon },
-            }
-          : null,
-      );
+      setDeliveryInfo((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev, // Spread previous state to keep the delivery type!
+          distance: dist,
+          deliveryFee: fee,
+          userLocation: { lat: data.lat, lon: data.lon },
+        };
+      });
 
       setDeliveryAddress((prev) =>
         prev
