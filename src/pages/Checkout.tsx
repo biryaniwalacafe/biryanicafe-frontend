@@ -1189,59 +1189,61 @@ export default function Checkout() {
     setDeliveryAddress((prev) => (prev ? { ...prev, [field]: value } : null));
   };
 
-  const handleMapLocationSelect = ({
-    lat,
-    lon,
-    address,
-  }: {
-    lat: number;
-    lon: number;
-    address?: string;
-  }) => {
-    // 1. Calculate Distance
-    const dist = haversineMiles(
-      RESTAURANT_LOCATION.lat,
-      RESTAURANT_LOCATION.lon,
-      lat,
-      lon,
-    );
+  const handleMapLocationSelect = (
+    // lat,
+    // lon,
+    // address,
+    data: { lat: number; lon: number; address?: string }, //: {
+  ) =>
+    // lat: number;
+    // lon: number;
+    // address?: string;
+    //})
+    {
+      // 1. Calculate Distance
+      const dist = haversineMiles(
+        RESTAURANT_LOCATION.lat,
+        RESTAURANT_LOCATION.lon,
+        data.lat,
+        data.lon,
+      );
 
-    // 2. Determine Fee & Validity based on Distance
-    let fee = 0;
-    let error = null;
+      // 2. Determine Fee & Validity based on Distance
+      let fee = 0;
+      let error = null;
 
-    if (dist > MAX_DELIVERY_RADIUS_MILES) {
-      error = `We only deliver within ${MAX_DELIVERY_RADIUS_MILES} miles. You are ${dist.toFixed(2)} miles away.`;
-    } else if (dist <= FREE_DELIVERY_RADIUS_MILES) {
-      fee = 0;
-    } else {
-      fee = STANDARD_DELIVERY_FEE;
-    }
+      if (dist > MAX_DELIVERY_RADIUS_MILES) {
+        error = `We only deliver within ${MAX_DELIVERY_RADIUS_MILES} miles. You are ${dist.toFixed(2)} miles away.`;
+      } else if (dist <= FREE_DELIVERY_RADIUS_MILES) {
+        fee = 0;
+      } else {
+        fee = STANDARD_DELIVERY_FEE;
+      }
 
-    // 3. Update State
-    setDeliveryError(error);
-    setDeliveryInfo((prev) =>
-      prev
-        ? {
-            ...prev,
-            distance: dist,
-            deliveryFee: fee,
-            userLocation: { lat, lon },
-          }
-        : null,
-    );
+      // 3. Update State
+      setDeliveryError(error);
+      setDeliveryInfo((prev) =>
+        prev
+          ? {
+              ...prev,
+              distance: dist,
+              deliveryFee: fee,
+              userLocation: { lat: data.lat, lon: data.lon },
+            }
+          : null,
+      );
 
-    setDeliveryAddress((prev) =>
-      prev
-        ? {
-            ...prev,
-            latitude: lat,
-            longitude: lon,
-            address_line: address || prev.address_line,
-          }
-        : null,
-    );
-  };
+      setDeliveryAddress((prev) =>
+        prev
+          ? {
+              ...prev,
+              latitude: data.lat,
+              longitude: data.lon,
+              address_line: data.address || prev.address_line,
+            }
+          : null,
+      );
+    };
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;

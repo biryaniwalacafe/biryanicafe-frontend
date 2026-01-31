@@ -121,23 +121,17 @@ import {
   useMapEvents,
   useMap,
 } from "react-leaflet";
-import { LatLngExpression, Icon } from "leaflet";
+import { LatLngExpression, divIcon } from "leaflet";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
-
-// Fix for missing marker icons
 import "leaflet/dist/leaflet.css";
 import "leaflet-geosearch/dist/geosearch.css";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-// Re-configure the Default Icon
-const DefaultIcon = new Icon({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+// Create a simple CSS-based marker symbol (A red circle with a white border)
+const customMarkerIcon = divIcon({
+  html: `<div style="background-color: #ef4444; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></div>`,
+  className: "custom-div-icon",
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
 });
 
 type LocationResult = {
@@ -157,7 +151,7 @@ export default function MapAddressPicker({
 }: Props) {
   const center: LatLngExpression = [initialLocation.lat, initialLocation.lon];
 
-  // Helper to move the map when initialLocation changes (from search or parent)
+  // Component to sync map view with the marker
   function RecenterMap({ lat, lon }: { lat: number; lon: number }) {
     const map = useMap();
     useEffect(() => {
@@ -175,7 +169,6 @@ export default function MapAddressPicker({
         style: "bar",
         showMarker: false,
         autoClose: true,
-        keepResult: true,
       });
 
       map.addControl(searchControl);
@@ -186,7 +179,6 @@ export default function MapAddressPicker({
           address: result.location.label,
         });
       });
-
       return () => {
         map.removeControl(searchControl);
       };
@@ -198,29 +190,31 @@ export default function MapAddressPicker({
     useMapEvents({
       async click(e) {
         const { lat, lng } = e.latlng;
+        // Fetch address from coordinates (Reverse Geocoding)
         try {
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
-            { headers: { "User-Agent": "FoodApp/1.0" } },
           );
           const data = await response.json();
+
           onSelectLocation({
             lat,
             lon: lng,
-            address: data.display_name || "",
+            address: data.display_name || "", // THIS UPDATES YOUR ADDRESS LINE
           });
         } catch (error) {
+          console.error("Reverse geocoding failed", error);
           onSelectLocation({ lat, lon: lng });
         }
       },
     });
 
-    return <Marker position={center} icon={DefaultIcon} />;
+    return <Marker position={center} icon={customMarkerIcon} />;
   }
 
   return (
-    <div className="h-[400px] w-full rounded-lg overflow-hidden border">
-      <MapContainer center={center} zoom={13} className="h-full w-full">
+    <div className="h-[400px] w-full rounded-lg overflow-hidden border relative">
+      <MapContainer center={center} zoom={15} className="h-full w-full">
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <RecenterMap lat={initialLocation.lat} lon={initialLocation.lon} />
         <SearchField />
