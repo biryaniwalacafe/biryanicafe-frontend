@@ -1299,8 +1299,8 @@ export default function Checkout() {
             }
           : null,
       payment_method: paymentData.method,
-      payment_token: paymentData.token || paymentData.nonce,
-      payment_nonce: paymentData.nonce, // For backward compatibility if needed
+      //payment_token: paymentData.token || paymentData.nonce,
+      payment_nonce: paymentData.token || paymentData.nonce, // For backward compatibility if needed
       items: items.map((item) => ({
         menu_item_id: parseInt(item.id, 10),
         quantity: item.quantity,
