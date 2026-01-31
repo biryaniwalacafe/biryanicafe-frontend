@@ -1108,18 +1108,33 @@ export default function Checkout() {
   }, [toast]);
 
   // Load Intent from Session (Pickup vs Delivery)
+  // useEffect(() => {
+  //   const storedDeliveryInfo = sessionStorage.getItem("deliveryOption");
+  //   if (storedDeliveryInfo && !deliveryInfo?.distance) {
+  //     const parsed = JSON.parse(storedDeliveryInfo);
+  //     setDeliveryInfo((prev) => ({
+  //       ...parsed,
+  //       // Reset these on fresh load to ensure recalculation happens via map
+  //       deliveryFee: prev?.deliveryFee ?? 0,
+  //       distance: prev?.distance || null,
+  //     }));
+  //   }
+  // }, [deliveryInfo?.distance]);
+
   useEffect(() => {
     const storedDeliveryInfo = sessionStorage.getItem("deliveryOption");
-    if (storedDeliveryInfo && !deliveryInfo?.distance) {
+    if (storedDeliveryInfo) {
       const parsed = JSON.parse(storedDeliveryInfo);
-      setDeliveryInfo((prev) => ({
-        ...parsed,
-        // Reset these on fresh load to ensure recalculation happens via map
-        deliveryFee: prev?.deliveryFee ?? 0,
-        distance: prev?.distance || null,
-      }));
+      setDeliveryInfo({
+        type: parsed.type || "pickup",
+        // 📍 Use the fee and distance from storage if they exist
+        deliveryFee:
+          typeof parsed.deliveryFee === "number" ? parsed.deliveryFee : 0,
+        distance: parsed.distance || null,
+        userLocation: parsed.userLocation || null,
+      });
     }
-  }, [deliveryInfo?.distance]);
+  }, []);
 
   // Initialize Address State if Empty
   useEffect(() => {
@@ -1222,15 +1237,26 @@ export default function Checkout() {
 
       // 3. Update State
       setDeliveryError(error);
-      setDeliveryInfo((prev) => {
-        if (!prev) return null;
-        return {
-          ...prev, // Spread previous state to keep the delivery type!
-          distance: dist,
-          deliveryFee: fee,
-          userLocation: { lat: data.lat, lon: data.lon },
-        };
-      });
+
+      const updatedInfo = {
+        type: "delivery" as const,
+        distance: dist,
+        deliveryFee: fee,
+        userLocation: { lat: data.lat, lon: data.lon },
+      };
+
+      sessionStorage.setItem("deliveryOption", JSON.stringify(updatedInfo));
+      setDeliveryInfo(updatedInfo);
+
+      // setDeliveryInfo((prev) => {
+      //   if (!prev) return null;
+      //   return {
+      //     ...prev, // Spread previous state to keep the delivery type!
+      //     distance: dist,
+      //     deliveryFee: fee,
+      //     userLocation: { lat: data.lat, lon: data.lon },
+      //   };
+      // });
 
       setDeliveryAddress((prev) =>
         prev
